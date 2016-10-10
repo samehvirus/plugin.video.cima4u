@@ -4,8 +4,9 @@ import re
 import sys
 import urllib
 from urlparse import parse_qsl
+import cf
 
-import requests
+#import requests
 import urlresolver
 
 try:
@@ -22,6 +23,7 @@ import xbmcaddon
 import xbmcgui
 import xbmcplugin
 
+scraper = cf.create_scraper()
 # important variables
 _plugin_handle = int(sys.argv[1])
 _plugin_url = sys.argv[0]
@@ -81,7 +83,8 @@ serverphp_url = 'http://live.cima4u.tv/structure/server.php'
 
 # important settings
 open_load_yd = xbmcplugin.getSetting(_plugin_handle, 'open_load_yd')
-detalis = xbmcplugin.getSetting(_plugin_handle, 'Show_Movie_details')
+#detalis = xbmcplugin.getSetting(_plugin_handle, 'Show_Movie_details')
+detalis = 'false'
 # for better viewing
 xbmcplugin.setContent(_plugin_handle, 'musicvideos')
 
@@ -120,7 +123,7 @@ def other_series():
 
 
 def get_videos(url, is_this_page=False):
-    req = requests.get(url, headers=headers)
+    req = scraper.get(url)
     soup = BeautifulSoup(req.content)
     all_videos = soup.find_all("div", class_="block")
     for video in all_videos:
@@ -164,7 +167,7 @@ def get_videos(url, is_this_page=False):
 
 
 def get_series(url, is_this_page=False):
-    req = requests.get(url, headers=headers)
+    req = scraper.get(url, headers=headers)
     soup = BeautifulSoup(req.content)
     # Get Movies-series #dataTab > div:nth-child(1)
     all_videos = soup.find_all("div", class_="block")
@@ -234,7 +237,7 @@ def search():
 
 
 def choose_episode(url):
-    req = requests.get(url)
+    req = scraper.get(url)
     soup = BeautifulSoup(req.text)
     # episodes
     episodes = soup.find_all('div', class_='col-md-2')
@@ -248,7 +251,7 @@ def choose_episode(url):
 
 def get_movie_detalis(url):
     try:
-        req = requests.get(url)
+        req = scraper.get(url)
         soup = BeautifulSoup(req.text)
         # مشاهده الان #
         link = soup.find_all('div', class_='leftDetails')[0]
@@ -268,7 +271,7 @@ def get_movie_detalis(url):
 
 
 def get_movie_page(url):
-    req = requests.get(url)
+    req = scraper.get(url)
     soup = BeautifulSoup(req.text)
     link = soup.find_all('div', class_='leftDetails')[0]
     movie_link = link.a['href']
@@ -276,7 +279,7 @@ def get_movie_page(url):
 
 
 def fetch_servers_links(url):
-    req = requests.get(url)
+    req = scraper.get(url)
     soup = BeautifulSoup(req.text)
     servers = soup.find_all('a', class_='sever_link')
     servers_names = list(server.get_text() for server in servers)
@@ -288,7 +291,7 @@ def fetch_servers_links(url):
     ret = dialog.select('select server', servers_names)
     if ret == -1:
         exit()
-    content = requests.get(serverphp_url, params={'id': servers[int(ret)]['data-link']}).content
+    content = scraper.get(serverphp_url, params={'id': servers[int(ret)]['data-link']}).content
     soup = BeautifulSoup(content)
     link = soup.iframe['src']
     link_resolvers(link, servers_names[int(ret)])
@@ -350,7 +353,7 @@ def link_resolvers(link, server_name):
 
 def resolve_this_locally(url):
     """ resolve vidtodo , vidbom and vidshare links """
-    req = requests.get(url)
+    req = scraper.get(url)
     content = req.content
     if 'vidtodo' in url:
         # vidtodo
@@ -386,7 +389,7 @@ def add_to_watch_later(params):
     fav = '###name###' + params['name']
     fav += '###url###' + params['url']
     fav += '###thumb###' + params['thumb']
-    # fav += '###desc###'+params['desc']
+    fav += '###mode###'+params['mode']
     fav += '###end###'
     if os.path.exists(FavsFile):
         fh = open(FavsFile, 'r')
@@ -419,7 +422,7 @@ def del_from_watch_later(params):
     fav = '###name###' + params['name']
     fav += '###url###' + params['url']
     fav += '###thumb###' + params['thumb']
-    # fav += '###desc###'+params['desc']
+    fav += '###mode###'+params['mode']
     fav += '###end###'
     newdata = filedata.replace(fav, "")
     fh = open(FavsFile, 'w')
@@ -434,9 +437,9 @@ def read_watch_later_list():
         fh = open(FavsFile, 'r')
         content = fh.read()
         fh.close()
-        match = re.compile('###name###(.+?)###url###(.+?)###thumb###(.+?)###end###').findall(content)
-        for name, url, thumb in match:
-            add_link(name, url, 'GetFavMovieServers', thumb)
+        match = re.compile('###name###(.+?)###url###(.+?)###thumb###(.+?)###mode###(.+?)###end###').findall(content)
+        for name, url, thumb, mode in match:
+            add_link(name, url, mode, thumb, fav=True)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
     else:
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
@@ -454,7 +457,7 @@ def add_dir(name, url, mode, thumb):
     return
 
 
-def add_link(name, url, mode, thumb, views=0, small_desc='', desc='', video_date=''):
+def add_link(name, url, mode, thumb, views=0, small_desc='', desc='', video_date='', fav=False):
     u = _plugin_url + "?url=" + url + "&mode=" + mode + "&name=" + urllib.quote_plus(name)
     liz = xbmcgui.ListItem(name)
     if mode == 'ChooseEpisode' or detalis == 'false':
@@ -472,16 +475,16 @@ def add_link(name, url, mode, thumb, views=0, small_desc='', desc='', video_date
     liz.setProperty("IsPlayable", "true")
 
     context_menu_items = []
-    if mode == 'GetFavMovieServers':
+    if fav:
         context_menu_items.append(('Remove From watch later list',
-                                   'XBMC.RunPlugin(%s?mode=DelFav&name=%s&url=%s&thumb=%s)' % (
-                                       sys.argv[0], urllib.quote_plus(name), urllib.quote_plus(url),
-                                       urllib.quote_plus(thumb))))
+                                   'XBMC.RunPlugin(%s?mode=%s&name=%s&url=%s&thumb=%s&fav=%s)' % (
+                                       sys.argv[0], mode, urllib.quote_plus(name), urllib.quote_plus(url),
+                                       urllib.quote_plus(thumb), 'DEL')))
         context_menu_items.append(('Remove all the list', 'XBMC.RunPlugin(%s?mode=ClearFavList)' % (sys.argv[0])))
     else:
         context_menu_items.append(
-            ('Add to watch later list', 'XBMC.RunPlugin(%s?mode=AddFav&name=%s&url=%s&thumb=%s)' % (
-                sys.argv[0], urllib.quote_plus(name), urllib.quote_plus(url), urllib.quote_plus(thumb))))
+            ('Add to watch later list', 'XBMC.RunPlugin(%s?mode=%s&name=%s&url=%s&thumb=%s&fav=%s)' % (
+                sys.argv[0], mode, urllib.quote_plus(name), urllib.quote_plus(url), urllib.quote_plus(thumb), 'ADD')))
     context_menu_items.append(('Refresh Content', 'Container.Refresh'))
     liz.addContextMenuItems(context_menu_items)
     xbmcplugin.addDirectoryItem(handle=_plugin_handle, url=u, listitem=liz, isFolder=False)
@@ -491,7 +494,11 @@ def add_link(name, url, mode, thumb, views=0, small_desc='', desc='', video_date
 def router(params_string):
     params = dict(parse_qsl(params_string))
     if params:
-        if params.get('mode') == 'GetServers' or params.get('mode') == 'GetFavMovieServers':
+        if params.get('fav') == 'ADD':
+            add_to_watch_later(params)
+        elif params.get('fav') == 'DEL':
+            del_from_watch_later(params)
+        elif params.get('mode') == 'GetServers' or params.get('mode') == 'GetFavMovieServers':
             get_movie_page(params['url'])
         elif params.get('mode') == 'OpenSettings':
             xbmcaddon.Addon().openSettings()
@@ -509,10 +516,10 @@ def router(params_string):
             get_series(params['url'], is_this_page=True)
         elif params.get('mode') == 'OtherSeries':
             other_series()
-        elif params.get('mode') == 'AddFav':
-            add_to_watch_later(params)
-        elif params.get('mode') == 'DelFav':
-            del_from_watch_later(params)
+        # elif params.get('mode') == 'AddFav':
+        #    add_to_watch_later(params)
+        # elif params.get('mode') == 'DelFav':
+        #     del_from_watch_later(params)
         elif params.get('mode') == 'GetFav':
             read_watch_later_list()
         elif params.get('mode') == 'ClearFavList':
