@@ -5,7 +5,7 @@ import sys
 import urllib
 from urlparse import parse_qsl
 import cf
-
+import easy_cache
 #import requests
 import urlresolver
 
@@ -31,6 +31,7 @@ _plugin_id = xbmcaddon.Addon().getAddonInfo('id')
 plugin_path = xbmcaddon.Addon().getAddonInfo('path')
 FavsDir = xbmc.translatePath("special://profile/addon_data/" + _plugin_id + "/")
 FavsFile = xbmc.translatePath("special://profile/addon_data/" + _plugin_id + "/favorites")
+CacheFile = xbmc.translatePath("special://profile/addon_data/" + _plugin_id + "/cache")
 user_agent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'
 headers = {'User-Agent': user_agent}
 dialog = xbmcgui.Dialog()
@@ -123,8 +124,8 @@ def other_series():
 
 
 def get_videos(url, is_this_page=False):
-    req = scraper.get(url)
-    soup = BeautifulSoup(req.content)
+    content = open_this_url(url)
+    soup = BeautifulSoup(content)
     all_videos = soup.find_all("div", class_="block")
     for video in all_videos:
         video_page = video.a['href']
@@ -166,9 +167,18 @@ def get_videos(url, is_this_page=False):
     exit()
 
 
+@easy_cache.persist_to_file(CacheFile)
+def open_this_url(url):
+    try:
+        req = scraper.get(url)
+    except:
+        dialog.ok('Error', 'Check your internet connection')
+    return req.content
+
+
 def get_series(url, is_this_page=False):
-    req = scraper.get(url, headers=headers)
-    soup = BeautifulSoup(req.content)
+    content = open_this_url(url)
+    soup = BeautifulSoup(content)
     # Get Movies-series #dataTab > div:nth-child(1)
     all_videos = soup.find_all("div", class_="block")
     for video in all_videos:
@@ -237,8 +247,8 @@ def search():
 
 
 def choose_episode(url):
-    req = scraper.get(url)
-    soup = BeautifulSoup(req.text)
+    content = open_this_url(url)
+    soup = BeautifulSoup(content)
     # episodes
     episodes = soup.find_all('div', class_='col-md-2')
     episodes_names = list(epi.a.get_text() for epi in episodes)
@@ -251,8 +261,8 @@ def choose_episode(url):
 
 def get_movie_detalis(url):
     try:
-        req = scraper.get(url)
-        soup = BeautifulSoup(req.text)
+        content = open_this_url(url)
+        soup = BeautifulSoup(content)
         # مشاهده الان #
         link = soup.find_all('div', class_='leftDetails')[0]
         movie_link = link.a['href']
@@ -271,16 +281,16 @@ def get_movie_detalis(url):
 
 
 def get_movie_page(url):
-    req = scraper.get(url)
-    soup = BeautifulSoup(req.text)
+    content = open_this_url(url)
+    soup = BeautifulSoup(content)
     link = soup.find_all('div', class_='leftDetails')[0]
     movie_link = link.a['href']
     fetch_servers_links(movie_link)
 
 
 def fetch_servers_links(url):
-    req = scraper.get(url)
-    soup = BeautifulSoup(req.text)
+    content = open_this_url(url)
+    soup = BeautifulSoup(content)
     servers = soup.find_all('a', class_='sever_link')
     servers_names = list(server.get_text() for server in servers)
     # mark unsupported servers with red
@@ -353,8 +363,7 @@ def link_resolvers(link, server_name):
 
 def resolve_this_locally(url):
     """ resolve vidtodo , vidbom and vidshare links """
-    req = scraper.get(url)
-    content = req.content
+    content = open_this_url(url)
     if 'vidtodo' in url:
         # vidtodo
         videos = re.compile('(http://[\.\w/_]+\.mp4)').findall(content)
