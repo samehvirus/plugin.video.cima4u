@@ -1,9 +1,8 @@
 <settings>
     <category label="general">
-         <!--
-        <setting label="Enable This Will Slow down the Movies Browsing!" type="lsep"/>
-        <setting id="Show_Movie_details" type="bool" label="[COLOR red]Show Movies Story's and Year[/COLOR]" default="false"/>
-        -->
+        <setting label="Cache Settings" type="lsep"/>
+        <setting id="cache_expired" label="expire after (hours)" type="slider" subsetting="true" default="12" range="1,1,48" option="int"/>
+        <!--<setting label="clear cache" type="action" action="RunScript(plugin.video.cima4u, 1)"/>-->
         <setting type="sep"/>
         <setting label="ydownloader resolvers" type="lsep"/>
         <setting id="open_load_yd" type="bool" label="Enable use of YoutubeDl module to resolve openload links" default="false" enable="System.HasAddon(script.module.youtube.dl)"/>

@@ -1,11 +1,8 @@
 import json
 import time
+import os
 
-cache_expired_in = 43200  #12 hours
-
-
-def persist_to_file(file_name):
-
+def persist_to_file(file_name, cache_expired_in):
     def decorator(original_func):
 
         try:
@@ -19,8 +16,10 @@ def persist_to_file(file_name):
                     return cache[param][0]
             cache[param] = [original_func(param), time.time()]
             json.dump(cache, open(file_name, 'w'))
+            size = os.path.getsize(file_name)
+            if size > 7.5e+7:  #limit cache file to 75 mega
+                open(file_name, 'w').close()
             return cache[param][0]
 
         return new_func
-
     return decorator

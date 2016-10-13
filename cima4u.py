@@ -6,7 +6,8 @@ import urllib
 from urlparse import parse_qsl
 import cf
 import easy_cache
-#import requests
+import requests
+import time  #temp
 import urlresolver
 
 try:
@@ -83,8 +84,12 @@ search_url = ('http://cima4u.tv/?s=', 'http://live.cima4u.tv/Search?q=')
 serverphp_url = 'http://live.cima4u.tv/structure/server.php'
 
 # important settings
+# cache settings start
+cache_expired = xbmcplugin.getSetting(_plugin_handle, 'cache_expired')
+s_cache_expired = int(cache_expired) * 3600 if cache_expired != '' else None
+# cache settings end
 open_load_yd = xbmcplugin.getSetting(_plugin_handle, 'open_load_yd')
-#detalis = xbmcplugin.getSetting(_plugin_handle, 'Show_Movie_details')
+
 detalis = 'false'
 # for better viewing
 xbmcplugin.setContent(_plugin_handle, 'musicvideos')
@@ -167,13 +172,15 @@ def get_videos(url, is_this_page=False):
     exit()
 
 
-@easy_cache.persist_to_file(CacheFile)
+@easy_cache.persist_to_file(CacheFile, s_cache_expired)
 def open_this_url(url):
     try:
         req = scraper.get(url)
     except:
         dialog.ok('Error', 'Check your internet connection')
-    return req.content
+        exit()
+    else:
+        return req.content
 
 
 def get_series(url, is_this_page=False):
@@ -502,45 +509,47 @@ def add_link(name, url, mode, thumb, views=0, small_desc='', desc='', video_date
 
 def router(params_string):
     params = dict(parse_qsl(params_string))
+    favourite = params.get('fav')
+    mode = params.get('mode')
+    url = params.get('url')
+
     if params:
-        if params.get('fav') == 'ADD':
+        if favourite == 'ADD':
             add_to_watch_later(params)
-        elif params.get('fav') == 'DEL':
+        elif favourite == 'DEL':
             del_from_watch_later(params)
-        elif params.get('mode') == 'GetServers' or params.get('mode') == 'GetFavMovieServers':
+        elif mode == 'GetServers' or mode == 'GetFavMovieServers':
             get_movie_page(params['url'])
-        elif params.get('mode') == 'OpenSettings':
+        elif mode == 'OpenSettings':
             xbmcaddon.Addon().openSettings()
-        elif params.get('mode') == 'Search':
+        elif mode == 'Search':
             search()
-        elif params.get('mode') == 'GetMovies':
+        elif mode == 'GetMovies':
             get_videos(params['url'])
-        elif params.get('mode') == 'GetPgaeMovies':
+        elif mode == 'GetPgaeMovies':
             get_videos(params['url'], is_this_page=True)
-        elif params.get('mode') == 'ChooseEpisode':
+        elif mode == 'ChooseEpisode':
             choose_episode(params['url'])
-        elif params.get('mode') == 'GetSeries':
+        elif mode == 'GetSeries':
             get_series(params['url'])
-        elif params.get('mode') == 'GetPageSeries':
+        elif mode == 'GetPageSeries':
             get_series(params['url'], is_this_page=True)
-        elif params.get('mode') == 'OtherSeries':
+        elif mode == 'OtherSeries':
             other_series()
-        # elif params.get('mode') == 'AddFav':
-        #    add_to_watch_later(params)
-        # elif params.get('mode') == 'DelFav':
-        #     del_from_watch_later(params)
-        elif params.get('mode') == 'GetFav':
+        elif mode == 'GetFav':
             read_watch_later_list()
-        elif params.get('mode') == 'ClearFavList':
+        elif mode == 'ClearFavList':
             ret = dialog.yesno('Clear Your Watch List', 'Are You Sure? All Videos in This List will removed!')
             if ret == 1:
                 os.remove(FavsFile)
                 xbmc.executebuiltin("Container.Refresh")
                 dialog.notification('Watch List Cleared', '',
                                     xbmcgui.NOTIFICATION_INFO, 2000)
+
     else:
         # plugin called from kodi gui without any parameters
         categories()
+        exit()
 
 
 if __name__ == '__main__':
