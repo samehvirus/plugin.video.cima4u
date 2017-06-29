@@ -78,6 +78,9 @@ indian_se_trans = 'http://live.cima4u.tv/23.%D9%85%D8%B3%D9%84%D8%B3%D9%84%D8%A7
 indian_se_dub = 'http://live.cima4u.tv/22.%D9%85%D8%B3%D9%84%D8%B3%D9%84%D8%A7%D8%AA+%D9%87%D9%86%D8%AF%D9%8A%D8%A9+%D9%85%D8%AF%D8%A8%D9%84%D8%AC%D8%A9.html'
 ramadan_sixten = 'http://live.cima4u.tv/28.%D9%85%D8%B3%D9%84%D8%B3%D9%84%D8%A7%D8%AA+%D8%B1%D9%85%D8%B6%D8%A7%D9%86+2016.html'
 tv_shows_url = 'http://live.cima4u.tv/24.%D8%A8%D8%B1%D8%A7%D9%85%D8%AC+%D8%AA%D9%84%D9%81%D8%B2%D9%8A%D9%88%D9%86%D9%8A%D8%A9.html'
+egypt_series_2017_url = 'http://live.cima4u.tv/29.%D9%85%D8%B3%D9%84%D8%B3%D9%84%D8%A7%D8%AA+%D9%85%D8%B5%D8%B1%D9%8A%D8%A9.html'
+gulf_series_2017_url = 'http://live.cima4u.tv/30.%D9%85%D8%B3%D9%84%D8%B3%D9%84%D8%A7%D8%AA+%D8%B3%D9%88%D8%B1%D9%8A%D8%A9+%D9%88%D9%84%D8%A8%D9%86%D8%A7%D9%86%D9%8A%D8%A9+%D9%88%D8%AE%D9%84%D9%8A%D8%AC%D9%8A%D8%A9.html'
+tv_shows_2017_url = 'http://live.cima4u.tv/32.%D8%A8%D8%B1%D8%A7%D9%85%D8%AC+%D8%B1%D9%85%D8%B6%D8%A7%D9%86+2017.html'
 # search
 search_url = ('http://cima4u.tv/?s=', 'http://live.cima4u.tv/Search?q=')
 # http://live.cima4u.tv/structure/server.php?id=
@@ -100,11 +103,11 @@ def categories():
     add_dir('[COLOR gold]English Movies[/COLOR]', english_movies_url, 'GetMovies', folder_thumb)
     add_dir('[COLOR gold]Indian Movies[/COLOR]', indian_movies, 'GetMovies', folder_thumb)
     add_dir('[COLOR gold]Cartoon[/COLOR]', cartoon_url, 'GetMovies', folder_thumb)
-    add_dir('[COLOR gold]Egyptian Series[/COLOR]', egypt_series_url, 'GetSeries', folder_thumb)
+    add_dir('[COLOR gold]Ramadan 2017 Egyption Series[/COLOR]', egypt_series_2017_url, 'GetSeries', folder_thumb)
     add_dir('[COLOR gold]Ramadan 2016 Series[/COLOR]', ramadan_sixten, 'GetSeries', folder_thumb)
+    add_dir('[COLOR gold]Egyptian Series 2016[/COLOR]', egypt_series_url, 'GetSeries', folder_thumb)
     add_dir('[COLOR gold]Other Series[/COLOR]', '', 'OtherSeries', folder_thumb)
-    add_dir('[COLOR gold]TV SHOWS[/COLOR]', tv_shows_url, 'GetSeries', folder_thumb)
-    add_dir('[COLOR gold]free wrestling[/COLOR]', free_wrestling_url, 'GetMovies', folder_thumb)
+    add_dir('[COLOR gold]TV SHOWS 2017[/COLOR]', tv_shows_2017_url, 'GetSeries', folder_thumb)
     add_dir('[COLOR gold]List: [/COLOR]Watch Later', '', 'GetFav', folder_thumb)
     add_dir('Search', '', 'Search', search_thumb)
     add_dir('[COLOR red]Settings[/COLOR]', 'settings', 'OpenSettings', settings_thumb)
@@ -112,7 +115,9 @@ def categories():
 
 
 def other_series():
-    add_dir('[COLOR gold]مسلسلات خليجي[/COLOR]', gulf_series_url, 'GetSeries', folder_thumb)
+
+    add_dir('[COLOR gold]مسلسلات خليجي 2016[/COLOR]', gulf_series_url, 'GetSeries', folder_thumb)
+    add_dir('[COLOR gold]مسلسلات خليجي 2017[/COLOR]', gulf_series_2017_url, 'GetSeries', folder_thumb)
     add_dir('[COLOR gold]مسلسلات اجنبيه[/COLOR]', english_series_url, 'GetSeries', folder_thumb)
     add_dir('[COLOR gold]مسلسلات تركيه مترجمه[/COLOR]', turkish_se_trans_url, 'GetSeries', folder_thumb)
     add_dir('[COLOR gold]مسلسلات تركيه مدبلجه[/COLOR]', turkish_se_dub_url, 'GetSeries', folder_thumb)
@@ -122,6 +127,9 @@ def other_series():
     add_dir('[COLOR gold]مسلسلات اسيويه مدبلجه[/COLOR]', asian_se_dub, 'GetSeries', folder_thumb)
     add_dir('[COLOR gold]مسلسلات هنديه مترجمه[/COLOR]', indian_se_trans, 'GetSeries', new_thumb)
     add_dir('[COLOR gold]مسلسلات هنديه مدبلجه[/COLOR]', indian_se_dub, 'GetSeries', folder_thumb)
+    add_dir('[COLOR gold]برامج 2016[/COLOR]', tv_shows_url, 'GetSeries', folder_thumb)
+    add_dir('[COLOR gold]مصارعة حرة[/COLOR]', free_wrestling_url, 'GetMovies', folder_thumb)
+
     add_dir('Search', '', 'Search', search_thumb)
     add_dir('[COLOR red]Settings[/COLOR]', 'settings', 'OpenSettings', settings_thumb)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))

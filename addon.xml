@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.cima4u" name="Cima4U" version="1.1.1" provider-name="samehvirus">
+<addon id="plugin.video.cima4u" name="Cima4U" version="1.1.2" provider-name="samehvirus">
   <requires>
     <import addon="xbmc.python" version="2.2.0"/>
     <import addon="script.module.urlresolver" version="3.0.20"/>
@@ -17,6 +17,8 @@
     </disclaimer>
     <platform>all</platform>
     <news>
+        1.1.2
+        added 2017 series
         1.0.0
         fix in watch later list functions
         fix web site changes blocked kodi script from access the site
